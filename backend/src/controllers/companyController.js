@@ -3,19 +3,80 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken'); // Import de jwt
 
 const addCompany = async (req, res) => {
-    const { name, email, phone, address, sector, description, website, social_links, password } = req.body; // Correction ici
+    const { name, email, phone, address, sector, description, website, social_links, password } = req.body;
+    
+    console.log('Received company registration request:', {
+        ...req.body,
+        password: '***hidden***' // Pour ne pas logger le mot de passe
+    });
 
     try {
-        const hashedPassword = await bcrypt.hash(password, 10); // Hachage du mot de passe
-        const result = await pool.query(
-            `INSERT INTO companies (name, email, phone, address, sector, description, website, social_links, password)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-            [name, email, phone, address, sector, description, website, social_links, hashedPassword]
+        // Vérifier si l'email existe déjà
+        const emailCheck = await pool.query('SELECT * FROM companies WHERE email = $1', [email]);
+        if (emailCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+        }
+
+        // Hasher le mot de passe
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Préparer les valeurs par défaut pour les champs optionnels
+        const websiteValue = website || null;
+        const social_linksValue = social_links || null;
+
+        const query = `
+            INSERT INTO companies 
+            (name, email, phone, address, sector, description, website, social_links, password, is_verified)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
+            RETURNING id, name, email, phone, address, sector, description, website, social_links`;
+
+        const result = await pool.query(query, [
+            name,
+            email,
+            phone,
+            address,
+            sector,
+            description,
+            websiteValue,
+            social_linksValue,
+            hashedPassword
+        ]);
+        
+        console.log('Company created successfully:', result.rows[0]);
+
+        // Créer un token JWT pour la nouvelle entreprise
+        const token = jwt.sign(
+            { id: result.rows[0].id, type: 'company' },
+            process.env.JWT_SECRET || 'secret_key',
+            { expiresIn: '24h' }
         );
-        res.status(201).json(result.rows[0]);
+
+        // Retourner les données de l'entreprise avec le token
+        res.status(201).json({
+            company: result.rows[0],
+            token
+        });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur lors de l\'ajout de l\'entreprise' });
+        console.error('Error creating company:', err);
+        
+        // Gestion spécifique des erreurs
+        if (err.code === '23505') { // Code pour violation de contrainte unique
+            return res.status(400).json({ 
+                error: 'Une entreprise avec cet email existe déjà'
+            });
+        }
+
+        if (err.code === '23502') { // Code pour violation de contrainte NOT NULL
+            return res.status(400).json({ 
+                error: 'Tous les champs requis doivent être remplis'
+            });
+        }
+
+        res.status(500).json({ 
+            error: 'Erreur lors de l\'ajout de l\'entreprise',
+            details: err.message
+        });
     }
 };
 
@@ -23,31 +84,51 @@ const loginCompany = async (req, res) => {
     const { email, password } = req.body;
 
     try {
+        // Vérifier si l'entreprise existe
         const result = await pool.query('SELECT * FROM companies WHERE email = $1', [email]);
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Entreprise non trouvée' });
         }
 
         const company = result.rows[0];
+
+        // Vérifier le mot de passe
         const validPassword = await bcrypt.compare(password, company.password);
         if (!validPassword) {
             return res.status(401).json({ error: 'Mot de passe incorrect' });
         }
 
-        const token = jwt.sign({ id: company.id, name: company.name }, 'secret_key', { expiresIn: '24h' });
-        res.json({ token });
+        // Créer le token
+        const token = jwt.sign(
+            { id: company.id, type: 'company' },
+            process.env.JWT_SECRET || 'secret_key',
+            { expiresIn: '24h' }
+        );
+
+        // Retourner les données sans le mot de passe
+        const { password: _, ...companyData } = company;
+        
+        res.json({
+            token,
+            company: companyData
+        });
     } catch (err) {
-        console.error(err);
+        console.error('Erreur de connexion:', err);
         res.status(500).json({ error: 'Erreur lors de la connexion' });
     }
 };
 
 const getAllCompanies = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM companies WHERE is_verified = TRUE');
+        // Enlever le filtre is_verified pour voir toutes les entreprises
+        const result = await pool.query(`
+            SELECT id, name, email, phone, address, sector, description, website, is_verified 
+            FROM companies
+        `);
+        console.log('Companies found:', result.rows.length);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching companies:', err);
         res.status(500).json({ error: 'Erreur lors de la récupération des entreprises' });
     }
 };
