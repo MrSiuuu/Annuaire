@@ -1,0 +1,24 @@
+<div class="container">
+  <h1>Liste des entreprises</h1>
+
+  <div *ngIf="companies.length === 0">
+    <p>Aucune entreprise trouvée.</p>
+  </div>
+
+  <table *ngIf="companies.length > 0">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Description</th>
+        <th>Secteur</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let company of companies">
+        <td>{{ company.name }}</td>
+        <td>{{ company.description }}</td>
+        <td>{{ company.sector }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
