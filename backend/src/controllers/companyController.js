@@ -120,11 +120,10 @@ const loginCompany = async (req, res) => {
 
 const getAllCompanies = async (req, res) => {
     try {
-        // Enlever le filtre is_verified pour voir toutes les entreprises
-        const result = await pool.query(`
-            SELECT id, name, email, phone, address, sector, description, website, is_verified 
-            FROM companies
-        `);
+        // Ajout d'une condition pour filtrer les entreprises vérifiées
+        const query = 'SELECT * FROM companies WHERE is_verified = true ORDER BY created_at DESC';
+        const result = await pool.query(query);
+        
         console.log('Companies found:', result.rows.length);
         res.json(result.rows);
     } catch (err) {

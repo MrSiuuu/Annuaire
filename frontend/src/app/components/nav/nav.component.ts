@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-nav',
@@ -12,17 +13,22 @@ import { AuthService } from '../../services/auth.service';
       <div class="nav-brand">Annuaire</div>
       <div class="nav-links">
         <a routerLink="/" class="nav-link">Accueil</a>
-        <ng-container *ngIf="!authService.isLoggedIn()">
+        
+        @if (!authService.isLoggedIn()) {
           <a routerLink="/login" class="nav-link">Connexion</a>
           <a routerLink="/register" class="nav-link">Inscription</a>
-        </ng-container>
-        <ng-container *ngIf="authService.isLoggedIn()">
-          <a routerLink="/profile" class="nav-link">Profil</a>
+        }
+
+        @if (authService.isLoggedIn()) {
+          @if (authService.getUserType() === 'company') {
+            <a routerLink="/company-profile" class="nav-link">Profil Entreprise</a>
+          } @else if (authService.getUserType() === 'user') {
+            <a routerLink="/user-profile" class="nav-link">Mon Profil</a>
+          }
           <button (click)="logout()" class="nav-link">Déconnexion</button>
-        </ng-container>
-        <li>
-          <a routerLink="/admin/login">Admin</a>
-        </li>
+        }
+
+        <a routerLink="/admin/login" class="nav-link">Admin</a>
       </div>
     </nav>
   `,
@@ -65,9 +71,13 @@ import { AuthService } from '../../services/auth.service';
   `]
 })
 export class NavComponent {
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService: AuthService,
+    private router: Router
+  ) {}
 
   logout() {
     this.authService.logout();
+    this.router.navigate(['/']);
   }
 } 

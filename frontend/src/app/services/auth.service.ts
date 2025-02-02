@@ -81,10 +81,31 @@ export class AuthService {
 
   // Récupérer l'utilisateur courant
   getCurrentUser(): Observable<any> {
-    return this.currentUserSubject.asObservable();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return throwError(() => new Error('No token found'));
+    }
+
+    return this.http.get(`${this.apiUrl}/users/profile`).pipe(
+      tap(user => {
+        this.currentUserData = user;
+        this.currentUserSubject.next(user);
+      }),
+      catchError(error => {
+        console.error('Error fetching user profile:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getCurrentUserData() {
+    if (!this.currentUserData) {
+      // Si pas de données en mémoire, essayer de les récupérer depuis le localStorage
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        this.currentUserData = JSON.parse(userData);
+      }
+    }
     return this.currentUserData;
   }
 

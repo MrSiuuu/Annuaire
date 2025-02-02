@@ -10,8 +10,6 @@ router.patch('/update', verifyToken, userController.updateUser);
 router.patch('/update-password', verifyToken, userController.updatePassword);
 
 
-router.get('/profile', verifyToken, (req, res) => {
-    res.json({ message: `Bienveue ${req.user.user_type}`, user: req.user });
-});
+router.get('/profile', verifyToken, userController.getUserProfile);
 
 module.exports = router;

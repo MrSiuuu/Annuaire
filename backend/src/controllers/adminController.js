@@ -87,7 +87,56 @@ const loginAdmin = async (req, res) => {
     }
 };
 
+const getPendingCompanies = async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM companies WHERE is_verified = false ORDER BY created_at DESC'
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des entreprises en attente:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+};
+
+const getVerifiedCompanies = async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM companies WHERE is_verified = true ORDER BY created_at DESC'
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des entreprises vérifiées:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+};
+
+const verifyCompany = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'UPDATE companies SET is_verified = true WHERE id = $1 RETURNING *',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Entreprise non trouvée' });
+        }
+
+        res.json({
+            message: 'Entreprise validée avec succès',
+            company: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Erreur lors de la validation de l\'entreprise:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+};
+
 module.exports = {
     createFirstAdmin,
-    loginAdmin
+    loginAdmin,
+    getPendingCompanies,
+    getVerifiedCompanies,
+    verifyCompany
 }; 

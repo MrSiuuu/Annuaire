@@ -12,8 +12,8 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   getCompanies(): Observable<any[]> {
-    console.log('Fetching companies...');
-    return this.http.get<any[]>(`${this.apiUrl}/companies`).pipe(
+    console.log('Fetching verified companies...');
+    return this.http.get<any[]>(`${this.apiUrl}/companies?verified=true`).pipe(
       tap(companies => {
         console.log('Companies received:', companies);
       }),
