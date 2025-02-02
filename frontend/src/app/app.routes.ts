@@ -7,6 +7,7 @@ import { authGuard } from './guards/auth.guard';
 import { AdminLoginComponent } from './components/admin/admin-login.component';
 import { AdminDashboardComponent } from './components/admin/admin-dashboard.component';
 import { AdminGuard } from './guards/admin.guard';
+import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent }, // Route par défaut
@@ -31,6 +32,12 @@ export const routes: Routes = [
         canActivate: [AdminGuard]
       }
     ]
+  },
+  { 
+    path: 'user-profile', 
+    component: UserProfileComponent,
+    canActivate: [authGuard],
+    data: { requiredType: 'user' }
   },
   // Ajouter d'autres routes protégées ici
 ];
