@@ -67,12 +67,12 @@ export class AdminLoginComponent {
 
       this.authService.loginAdmin(credentials).subscribe({
         next: (response) => {
-          console.log('Connexion réussie:', response);
+          console.log('Connexion admin réussie:', response);
           this.router.navigate(['/admin/dashboard']);
         },
         error: (error) => {
-          console.error('Erreur détaillée:', error);
-          this.errorMessage = 'Erreur de connexion. Vérifiez vos identifiants.';
+          console.error('Erreur de connexion admin:', error);
+          this.errorMessage = error.error?.message || 'Erreur de connexion. Vérifiez vos identifiants.';
         }
       });
     }

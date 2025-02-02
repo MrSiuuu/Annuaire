@@ -106,12 +106,17 @@ export class AuthService {
   }
 
   loginAdmin(credentials: {email: string, password: string}) {
-    return this.http.post<any>(`${this.apiUrl}/users/login`, credentials).pipe(
+    return this.http.post<any>(`${this.apiUrl}/admin/login`, credentials).pipe(
       tap(response => {
         if (response.token) {
           localStorage.setItem('token', response.token);
+          localStorage.setItem('userType', 'admin');
           this.currentUserSubject.next(response.user);
         }
+      }),
+      catchError(error => {
+        console.error('Erreur de connexion admin:', error);
+        return throwError(() => error);
       })
     );
   }

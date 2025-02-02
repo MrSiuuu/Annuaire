@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
 const createFirstAdmin = async (req, res) => {
@@ -17,14 +18,15 @@ const createFirstAdmin = async (req, res) => {
 
         // Créer le premier admin
         const result = await pool.query(
-            `INSERT INTO users (name, email, password, user_type) 
-             VALUES ($1, $2, $3, $4) 
+            `INSERT INTO users (name, email, password, user_type, is_verified) 
+             VALUES ($1, $2, $3, $4, $5) 
              RETURNING id, name, email, user_type`,
             [
                 'admin',
                 'admin@example.com',
                 hashedPassword,
-                'admin'
+                'admin',
+                true
             ]
         );
 
@@ -39,6 +41,53 @@ const createFirstAdmin = async (req, res) => {
     }
 };
 
+const loginAdmin = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        // Vérifier si l'utilisateur existe et est un admin
+        const result = await pool.query(
+            'SELECT * FROM users WHERE email = $1 AND user_type = $2',
+            [email, 'admin']
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+        }
+
+        const admin = result.rows[0];
+
+        // Vérifier le mot de passe
+        const validPassword = await bcrypt.compare(password, admin.password);
+        if (!validPassword) {
+            return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+        }
+
+        // Créer le token
+        const token = jwt.sign(
+            { id: admin.id, user_type: admin.user_type },
+            process.env.JWT_SECRET || 'votre_secret_jwt_super_securise',
+            { expiresIn: '24h' }
+        );
+
+        // Retourner la réponse
+        res.json({
+            token,
+            user: {
+                id: admin.id,
+                name: admin.name,
+                email: admin.email,
+                user_type: admin.user_type
+            }
+        });
+
+    } catch (error) {
+        console.error('Erreur de connexion admin:', error);
+        res.status(500).json({ message: 'Erreur lors de la connexion' });
+    }
+};
+
 module.exports = {
-    createFirstAdmin
+    createFirstAdmin,
+    loginAdmin
 }; 
