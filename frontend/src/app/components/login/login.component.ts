@@ -125,8 +125,14 @@ export class LoginComponent implements OnInit {
       // Essayer d'abord la connexion utilisateur
       this.authService.loginUser(credentials).subscribe({
         next: (response) => {
-          console.log('Connexion utilisateur réussie:', response);
-          this.router.navigate(['/']);
+          // Vérifier s'il y a une entreprise en attente
+          const pendingCompanyId = localStorage.getItem('pendingCompanyId');
+          if (pendingCompanyId) {
+            localStorage.removeItem('pendingCompanyId');
+            this.router.navigate(['/company', pendingCompanyId]);
+          } else {
+            this.router.navigate(['/']);
+          }
         },
         error: (userError) => {
           // Si échec, essayer la connexion entreprise
