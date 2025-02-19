@@ -9,6 +9,14 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <div class="profile-container">
       <h2>Mon Compte Entreprise</h2>
+      
+      @if (!companyData.is_verified) {
+        <div class="verification-pending">
+          <p>Votre entreprise est en attente de validation par un administrateur.</p>
+          <p>Vous serez visible sur la page d'accueil une fois validé.</p>
+        </div>
+      }
+
       <div class="company-details" *ngIf="companyData">
         <div class="detail-item">
           <strong>Nom:</strong> {{ companyData.name }}
@@ -64,6 +72,15 @@ import { AuthService } from '../../services/auth.service';
       display: inline-block;
       width: 120px;
       color: #666;
+    }
+
+    .verification-pending {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      border: 1px solid #ffeeba;
     }
   `]
 })

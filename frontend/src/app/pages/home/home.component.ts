@@ -2,17 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="container">
       <h1>Liste des entreprises vérifiées</h1>
 
       <div class="companies-grid" *ngIf="companies.length > 0">
-        <div class="company-card" *ngFor="let company of companies">
+        <div class="company-card" *ngFor="let company of companies" 
+             [routerLink]="['/company', company.id]">
           <h3>{{ company.name }}</h3>
           <p class="sector">{{ company.sector }}</p>
           <p class="description">{{ company.description }}</p>
@@ -44,6 +46,13 @@ import { AuthService } from '../../services/auth.service';
       border-radius: 8px;
       padding: 20px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .company-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
     .sector {

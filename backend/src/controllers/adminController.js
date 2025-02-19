@@ -63,21 +63,25 @@ const loginAdmin = async (req, res) => {
             return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
         }
 
-        // Créer le token
+        // Créer le token avec plus d'informations
         const token = jwt.sign(
-            { id: admin.id, user_type: admin.user_type },
+            { 
+                id: admin.id, 
+                email: admin.email,
+                user_type: 'admin'  // Explicitement définir le type
+            },
             process.env.JWT_SECRET || 'votre_secret_jwt_super_securise',
             { expiresIn: '24h' }
         );
 
-        // Retourner la réponse
+        // Retourner une réponse plus complète
         res.json({
             token,
             user: {
                 id: admin.id,
                 name: admin.name,
                 email: admin.email,
-                user_type: admin.user_type
+                user_type: 'admin'
             }
         });
 

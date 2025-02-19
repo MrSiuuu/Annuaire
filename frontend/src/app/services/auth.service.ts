@@ -134,11 +134,12 @@ export class AuthService {
           localStorage.setItem('userType', 'admin');
           this.currentUserSubject.next(response.user);
         }
-      }),
-      catchError(error => {
-        console.error('Erreur de connexion admin:', error);
-        return throwError(() => error);
       })
     );
+  }
+
+  // Ajoutez cette méthode pour vérifier si l'utilisateur est un admin
+  isAdmin(): boolean {
+    return localStorage.getItem('userType') === 'admin';
   }
 } 

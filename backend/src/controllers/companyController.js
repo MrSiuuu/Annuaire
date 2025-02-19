@@ -27,7 +27,7 @@ const addCompany = async (req, res) => {
         const query = `
             INSERT INTO companies 
             (name, email, phone, address, sector, description, website, social_links, password, is_verified)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, FALSE)
             RETURNING id, name, email, phone, address, sector, description, website, social_links`;
 
         const result = await pool.query(query, [
@@ -53,6 +53,7 @@ const addCompany = async (req, res) => {
 
         // Retourner les données de l'entreprise avec le token
         res.status(201).json({
+            message: "Entreprise créée avec succès. En attente de validation par un administrateur.",
             company: result.rows[0],
             token
         });

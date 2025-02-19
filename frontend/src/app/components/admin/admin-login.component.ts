@@ -68,11 +68,15 @@ export class AdminLoginComponent {
       this.authService.loginAdmin(credentials).subscribe({
         next: (response) => {
           console.log('Connexion admin réussie:', response);
-          this.router.navigate(['/admin/dashboard']);
+          if (response.user?.user_type === 'admin') {
+            this.router.navigate(['/admin/dashboard']);
+          } else {
+            this.errorMessage = 'Accès non autorisé';
+          }
         },
         error: (error) => {
           console.error('Erreur de connexion admin:', error);
-          this.errorMessage = error.error?.message || 'Erreur de connexion. Vérifiez vos identifiants.';
+          this.errorMessage = error.error?.message || 'Identifiants invalides';
         }
       });
     }
